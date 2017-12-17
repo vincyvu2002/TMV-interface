@@ -339,6 +339,17 @@ procedure CheckClasse
     end loop
 end CheckClasse
 
+procedure SetEndCheck (value : boolean)
+    if value then
+	Font.Draw ("Setting endcheck to True", 0, 0, font1, white)
+    else
+	Font.Draw ("Setting endcheck to False", 0, 0, font1, white)
+    end if
+    EndDCheck := value
+    View.Update
+    delay (10000)
+end SetEndCheck
+
 procedure FadeToBlack
     for i : 1 .. 5
 	Pic.Draw (FTB (i), -150, -50, 0)
@@ -350,7 +361,7 @@ end FadeToBlack
 process CheckDSkip
     loop
 	if newChar = true and ch = 's' then
-	    EndDCheck := true
+	    SetEndCheck (true)
 	    return
 	end if
 	delay (100)
@@ -368,7 +379,7 @@ process DButtonAnimation
 	Pic.SetTransparentColour (SkipB, white) % Button white background = transparent
 	View.Update
 	if EndDCheck = true then
-	    EndDCheck := false
+	    SetEndCheck (false)
 	    EndDebate := true
 	    return
 	end if
@@ -386,31 +397,24 @@ process DButtonAnimation1
 	Pic.SetTransparentColour (SkipB, white) % Button white background = transparent
 	View.Update
 	if EndDCheck = true then
-	    EndDCheck := false
+	    SetEndCheck (false)
 	    EndDebate := true
 	    return
 	end if
     end loop
 end DButtonAnimation1
 
-procedure MinoriteVisibleScreen %%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure MinoriteVisibleScreen %%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%%%%%%%%%%%%%%%%%%%%%%% RN
     MinoriteVisibleCheck := true
     fork CheckDSkip
-    fork DButtonAnimation
+    fork DButtonAnimation % NOT ANIMATION1
     %for i : 1 .. 25
     loop
 	delay (100)
-	if EndDCheck = true then
-	    loop
-		if EndDebate = true then
-		    exit
-		end if
-		delay (250)
-	    end loop
-	end if
-    %end for
+	exit when EndDebate = true
+	%end for
     end loop
-    EndDCheck := true
+    %SetEndCheck (true)
 end MinoriteVisibleScreen
 
 procedure LoyalisteScreen
@@ -436,7 +440,7 @@ procedure CanadienFrancaisScreen %%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%
     fork CheckDSkip
     fork DButtonAnimation1
     loop
-    % for i : 1 .. 50
+	% for i : 1 .. 50
 	delay (100)
 	if EndDCheck = true then
 	    loop
@@ -446,9 +450,9 @@ procedure CanadienFrancaisScreen %%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%
 		delay (250)
 	    end loop
 	end if
-    % end for
+	% end for
     end loop
-    EndDCheck := true
+    %SetEndCheck (true)
 end CanadienFrancaisScreen
 
 procedure ClasseOuvriereScreen
