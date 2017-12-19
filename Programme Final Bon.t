@@ -17,6 +17,18 @@ var FTB : array 1 .. 5 of int
 for i : 1 .. 5
     FTB (i) := Pic.FileNew ("Arrière Plan AnBlF" + intstr (i) + ".bmp")
 end for
+var Loyaliste : array 1 .. 4 of int
+var CO : array 1 .. 4 of int
+var FemmeF : array 1 .. 4 of int
+for i : 1 .. 4
+    CO (i) := Pic.FileNew ("ClasseOF" + intstr (i) + ".jpg")
+    Loyaliste (i) := Pic.FileNew ("Loyaliste P" + intstr (i) + ".jpg")
+    FemmeF (i) := Pic.FileNew ("FemmeF" + intstr (i) + ".jpg")
+end for
+var GuerreTime : array 1 .. 3 of int
+for i : 1 .. 3
+    GuerreTime (i) := Pic.FileNew ("Guerre" + intstr (i) + ".jpg")
+end for
 
 D2_F1 := Pic.FileNew ("DébatMVvsF1.bmp")
 D1_F1 := Pic.FileNew ("DébatFCvsLF1.bmp")
@@ -64,6 +76,10 @@ procedure ResetGameVars
     EndMenuCheck := false
 end ResetGameVars
 
+procedure SetEndCheck (value : boolean)
+    EndDCheck := value
+end SetEndCheck
+
 procedure ResetVars
     x := maxx div 2
     y := maxy div 2
@@ -76,6 +92,7 @@ procedure ResetVars
     Classe1 := ""
     AnimateCheck := false
     EndDebate := false
+    SetEndCheck (false)
 end ResetVars
 
 var ch : string (1)
@@ -187,20 +204,21 @@ end DrawMCHA
 process KeyHandler %EMPTIES GETCH BUFFER
     loop
 	exit when running = false
-	getch (ch)
-	newChar := true
+	if parallelget not= 120 then
+	    newChar := true
+	end if
     end loop
 end KeyHandler
 
 process MoveCharacter
     loop
-	if newChar = true then
+	if parallelget not= 120 then
 	    if moveCount > 2 then
 		idle := false
 	    end if
 	    newChar := false
 	    DrawBackground
-	    if ch = 'a' then
+	    if parallelget = 104 then
 		SideCheck := 1
 		dCheck := 0
 		bCheck := 0
@@ -209,7 +227,7 @@ process MoveCharacter
 		aCheck := aCheck + 1
 		DrawMCLA
 		moveCount := moveCount + 1
-	    elsif ch = 'd' then
+	    elsif parallelget = 56 then
 		SideCheck := 2
 		aCheck := 0
 		bCheck := 0
@@ -218,7 +236,7 @@ process MoveCharacter
 		dCheck := dCheck + 1
 		DrawMCDA
 		moveCount := moveCount + 1
-	    elsif ch = 'w' then
+	    elsif parallelget = 88 then
 		SideCheck := 3
 		aCheck := 0
 		dCheck := 0
@@ -227,7 +245,7 @@ process MoveCharacter
 		hCheck := hCheck + 1
 		DrawMCHA
 		moveCount := moveCount + 1
-	    elsif ch = 's' then
+	    elsif parallelget = 112 then
 		SideCheck := 4
 		aCheck := 0
 		dCheck := 0
@@ -236,6 +254,62 @@ process MoveCharacter
 		bCheck := bCheck + 1
 		DrawMCBA
 		moveCount := moveCount + 1
+	    elsif SideCheck = 1 then
+		idle := true
+		SideCheck := 4
+		aCheck := 0
+		dCheck := 0
+		hCheck := 0
+		bCheck := 0
+		DrawBackground
+		DrawMCL (x, y)
+		loop
+		    if parallelget = 104 or parallelget = 56 or parallelget = 88 or parallelget = 112 or parallelget = 248 then
+			exit
+		    end if
+		end loop
+	    elsif SideCheck = 2 then
+		idle := true
+		SideCheck := 4
+		aCheck := 0
+		dCheck := 0
+		hCheck := 0
+		bCheck := 0
+		DrawBackground
+		DrawMCD (x, y)
+		loop
+		    if parallelget = 104 or parallelget = 56 or parallelget = 88 or parallelget = 112 or parallelget = 248 then
+			exit
+		    end if
+		end loop
+	    elsif SideCheck = 3 then
+		idle := true
+		SideCheck := 4
+		aCheck := 0
+		dCheck := 0
+		hCheck := 0
+		bCheck := 0
+		DrawBackground
+		DrawMCH (x, y)
+		loop
+		    if parallelget = 104 or parallelget = 56 or parallelget = 88 or parallelget = 112 or parallelget = 248 then
+			exit
+		    end if
+		end loop
+	    elsif SideCheck = 4 then
+		idle := true
+		SideCheck := 4
+		aCheck := 0
+		dCheck := 0
+		hCheck := 0
+		bCheck := 0
+		DrawBackground
+		DrawMCB (x, y)
+		loop
+		    if parallelget = 104 or parallelget = 56 or parallelget = 88 or parallelget = 112 or parallelget = 248 then
+			exit
+		    end if
+		end loop
 	    end if
 	elsif SideCheck = 1 and idle = false then
 	    idle := true
@@ -281,7 +355,7 @@ process MoveCharacter
 	    delay (60)
 	end if
 	View.Update
-	exit when ExitCheck = true
+	exit when EndGameCheck = true
     end loop
 end MoveCharacter
 
@@ -306,7 +380,7 @@ process KeepSpace
 	elsif y < 100 then
 	    Fall
 	end if
-	exit when ExitCheck = true
+	exit when EndGameCheck = true
 	delay (100)
     end loop
 end KeepSpace
@@ -314,23 +388,23 @@ end KeepSpace
 procedure CheckClasse
     loop
 	%MINORITE VISIBLE
-	if x > 115 and x < 250 and y < maxy div 2 + 50 and y > maxy div 2 - 50 and ch = 'i' then
+	if x > 115 and x < 250 and y < maxy div 2 + 50 and y > maxy div 2 - 50 and parallelget = 248 then
 	    Classe1 := "Minorite visible"
 	    ExitCheck := true
 	    %LOYALISTE
-	elsif x > 255 and x < 450 and y < maxy - 50 and y > maxy - 200 and ch = 'i' then
+	elsif x > 255 and x < 450 and y < maxy - 50 and y > maxy - 200 and parallelget = 248 then
 	    Classe1 := "Loyaliste"
 	    ExitCheck := true
 	    %FEMME
-	elsif x > 640 and x < 740 and y < maxy - 100 and y > maxy - 200 and ch = 'i' then
+	elsif x > 640 and x < 740 and y < maxy - 100 and y > maxy - 200 and parallelget = 248 then
 	    Classe1 := "Femme"
 	    ExitCheck := true
 	    %CANADIEN FRANCAIS
-	elsif x > 250 and x < 450 and y < 200 and y > 100 and ch = 'i' then
+	elsif x > 250 and x < 450 and y < 200 and y > 100 and parallelget = 248 then
 	    Classe1 := "Canadien francais"
 	    ExitCheck := true
 	    %CLASSE OUVRIERE
-	elsif x > 575 and x < 675 and y < 200 and y > 100 and ch = 'i' then
+	elsif x > 575 and x < 675 and y < 200 and y > 100 and parallelget = 248 then
 	    Classe1 := "Classe ouvriere"
 	    ExitCheck := true
 	end if
@@ -338,17 +412,6 @@ procedure CheckClasse
 	exit when ExitCheck = true
     end loop
 end CheckClasse
-
-procedure SetEndCheck (value : boolean)
-    if value then
-	Font.Draw ("Setting endcheck to True", 0, 0, font1, white)
-    else
-	Font.Draw ("Setting endcheck to False", 0, 0, font1, white)
-    end if
-    EndDCheck := value
-    View.Update
-    delay (10000)
-end SetEndCheck
 
 procedure FadeToBlack
     for i : 1 .. 5
@@ -360,7 +423,7 @@ end FadeToBlack
 
 process CheckDSkip
     loop
-	if newChar = true and ch = 's' then
+	if parallelget = 112 then
 	    SetEndCheck (true)
 	    return
 	end if
@@ -404,7 +467,7 @@ process DButtonAnimation1
     end loop
 end DButtonAnimation1
 
-procedure MinoriteVisibleScreen %%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%%%%%%%%%%%%%%%%%%%%%%% RN
+procedure MinoriteVisibleScreen
     MinoriteVisibleCheck := true
     fork CheckDSkip
     fork DButtonAnimation % NOT ANIMATION1
@@ -414,24 +477,56 @@ procedure MinoriteVisibleScreen %%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%%
 	exit when EndDebate = true
 	%end for
     end loop
-    %SetEndCheck (true)
+    SetEndCheck (true)
 end MinoriteVisibleScreen
 
 procedure LoyalisteScreen
-    Font.Draw ("Loyalistes - Canadiens Anglais", 0, maxy div 2, font1, black)
     LoyalisteCheck := true
-    View.Update
-    delay (2500)
+    for i : 1 .. 4
+	if i > 1 then
+	    Draw.Fill (1, 1, black, black)
+	    Pic.Draw (GuerreTime (i - 1), 50, 50, 0)
+	    View.Update
+	    cls
+	    delay (2500)
+	end if
+	Pic.Draw (Loyaliste (i), 0, 0, 0)
+	Pic.Draw (SkipB, -40, maxy - 200, picMerge)
+	Pic.SetTransparentColour (SkipB, white)
+	View.Update
+	delay (1000)
+	loop
+	    if parallelget = 112 then
+		exit
+	    end if
+	end loop
+    end for
 end LoyalisteScreen
 
 procedure FemmeScreen
-    Font.Draw ("Femmes", 0, maxy div 2, font1, black)
     FemmeCheck := true
-    View.Update
-    delay (2500)
+    for i : 1 .. 4
+	if i > 1 then
+	    Draw.Fill (1, 1, black, black)
+	    Pic.Draw (GuerreTime (i - 1), 50, 50, 0)
+	    View.Update
+	    cls
+	    delay (2500)
+	end if
+	Pic.Draw (FemmeF (i), 0, 0, 0)
+	Pic.Draw (SkipB, -40, maxy - 200, picMerge)
+	Pic.SetTransparentColour (SkipB, white)
+	View.Update
+	delay (1000)
+	loop
+	    if parallelget = 112 then
+		exit
+	    end if
+	end loop
+    end for
 end FemmeScreen
 
-procedure CanadienFrancaisScreen %%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+procedure CanadienFrancaisScreen
     CanadienFrancaisCheck := true
     Draw.Fill (1, 1, black, black)
     Pic.Draw (D1_F1, 75, 75, 0)     % ppl
@@ -439,27 +534,34 @@ procedure CanadienFrancaisScreen %%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%
     delay (1500)
     fork CheckDSkip
     fork DButtonAnimation1
-    loop
-	% for i : 1 .. 50
+    for i : 1 .. 50
 	delay (100)
-	if EndDCheck = true then
-	    loop
-		if EndDebate = true then
-		    exit
-		end if
-		delay (250)
-	    end loop
-	end if
-	% end for
-    end loop
-    %SetEndCheck (true)
+	exit when EndDebate = true
+    end for
+    SetEndCheck (true)
 end CanadienFrancaisScreen
 
 procedure ClasseOuvriereScreen
-    Font.Draw ("Classe Ouvrière", 0, maxy div 2, font1, black)
     ClasseOuvriereCheck := true
-    View.Update
-    delay (2500)
+    for i : 1 .. 4
+	if i > 1 then
+	    Draw.Fill (1, 1, black, black)
+	    Pic.Draw (GuerreTime (i - 1), 50, 50, 0)
+	    View.Update
+	    cls
+	    delay (2500)
+	end if
+	Pic.Draw (CO (i), 0, 0, 0)
+	Pic.Draw (SkipB, -40, maxy - 200, picMerge)
+	Pic.SetTransparentColour (SkipB, white)
+	View.Update
+	delay (1000)
+	loop
+	    if parallelget = 112 then
+		exit
+	    end if
+	end loop
+    end for
 end ClasseOuvriereScreen
 
 procedure SortClasse
@@ -595,11 +697,8 @@ end MenuScreenAnimation
 
 procedure MenuCheck
     loop
-	if newChar = true and ch = 'i' then
-	    newChar := false
-	    if ch = 'i' then
+	if parallelget = 248 then
 		EndMenuCheck := true
-	    end if
 	end if
 	delay (60)
 	exit when EndMenuCheck = true
@@ -609,8 +708,9 @@ end MenuCheck
 loop     % MAIN EVENTS
     ResetGameVars
     fork MenuScreenAnimation     % FLASHING OF YELLOW BUTTON + COPYRIGHT
-    fork KeyHandler     % GETCHES KEYS
+    % ***DO NOT NEED ANYMORE; USING PARALLELGET*** fork KeyHandler     % GETCHES KEYS
     MenuCheck     % CHECKS FOR I
+    delay (1000) % WAIT FOR MENUSCREENANIMATION TO TERMINATE
     loop
 	ResetVars     % RESETS UNIMPORTANT VALUES (EX: POSITIONS, etc...)
 	fork KeepSpace     % MAKES SOLDIER FALL OFF CLOUD
@@ -621,4 +721,5 @@ loop     % MAIN EVENTS
 	CheckEndPhase     % CHECKS TO SEE IF ALL CLASSES HAVE BEEN ACTIVATED BEFORE
 	exit when EndGameCheck = true
     end loop
+    delay (200) % Wait for KeepSpace and MoveChacrter to terminate
 end loop
